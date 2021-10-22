@@ -40,7 +40,16 @@ if __name__ == '__main__':
 
     # Based on run_validation_epoch, write code for computing the 10x10 confusion matrix.
     confusion_matrix = np.zeros([10, 10])
-    raise NotImplementedError()
+
+    for batch in valid_dataloader:
+        output = net(batch['input'])
+
+        invals = np.argmax(output.detach().numpy(),1)
+
+        outvals = batch['annotation'].detach().numpy()
+
+        for i in range(len(invals)):
+            confusion_matrix[invals[i], outvals[i]] += 1
     
     # Plot the confusion_matrix.
     plt.figure(figsize=[5, 5])

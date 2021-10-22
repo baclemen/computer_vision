@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.modules.activation import ReLU
 
 
 class MLPClassifier(nn.Module):
@@ -12,9 +13,14 @@ class MLPClassifier(nn.Module):
         # Input is 28 * 28.
         # Output is 10 values (one per class).
         # Multiple linear layers each followed by a ReLU non-linearity (apart from the last).
-        raise  NotImplementedError()
+        
+        # self.layers = nn.Sequential(
+        #     nn.Linear(784,10),
+        # )
         self.layers = nn.Sequential(
-            # TODO
+            nn.Linear(784,32),
+            nn.ReLU(),
+            nn.Linear(32,10),
         )
     
     def forward(self, batch):
@@ -36,15 +42,21 @@ class ConvClassifier(nn.Module):
         # Input is 28x28, with one channel.
         # Multiple Conv2d and MaxPool2d layers each followed by a ReLU non-linearity (apart from the last).
         # Needs to end with AdaptiveMaxPool2d(1) to reduce everything to a 1x1 image.
-        raise NotImplementedError()
         self.layers = nn.Sequential(
+            nn.Conv2d(1, 8, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2,2),
+            nn.Conv2d(8, 16, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2,2),
+            nn.Conv2d(16, 32, 3),
+            nn.ReLU(),
             nn.AdaptiveMaxPool2d(1)
-            # TODO
         )
         # Linear classification layer.
         # Output is 10 values (one per class).
         self.classifier = nn.Sequential(
-            # TODO
+            nn.Linear(32,10)
         )
     
     def forward(self, batch):
