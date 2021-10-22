@@ -30,7 +30,7 @@ class Simple2DDataset(Dataset):
     def __getitem__(self, idx):
         # Returns the sample and annotation with index idx.
         sample = self.samples[idx]
-        annotation = self.samples[idx]
+        annotation = self.annotations[idx]
         
         # Convert to tensor.
         return {
@@ -48,7 +48,11 @@ class Simple2DTransformDataset(Dataset):
         # Hint: you can use os.path.join to obtain a path in a subfolder.
         # Save samples and annotations to class members self.samples and self.annotations respectively.
         # Samples should be an Nx2 numpy array. Annotations should be Nx1.
-        raise NotImplementedError()
+        filepath = os.path.join("data", split + ".npz")
+        file = np.load(filepath)
+
+        self.samples = file["samples"]
+        self.annotations = file["annotations"]
             
     def __len__(self):
         # Returns the number of samples in the dataset.
@@ -56,9 +60,8 @@ class Simple2DTransformDataset(Dataset):
     
     def __getitem__(self, idx):
         # Returns the sample and annotation with index idx.
-        raise NotImplementedError()
-        sample = None
-        annotation = None
+        sample = self.samples[idx]
+        annotation = self.annotations[idx]
         
         # Transform the sample to a different coordinate system.
         sample = transform(sample)
@@ -71,6 +74,6 @@ class Simple2DTransformDataset(Dataset):
 
 
 def transform(sample):
-    raise NotImplementedError()
-    new_sample = None
-    return new_sample
+    r = np.sqrt(pow(sample[0], 2) + pow(sample[1], 2))
+    phi = np.arctan(sample[1] / sample[0])
+    return np.array([r, phi])

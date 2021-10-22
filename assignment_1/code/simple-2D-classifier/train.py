@@ -19,19 +19,19 @@ def run_training_epoch(net, optimizer, dataloader):
     net.train()
     # Loop over batches.
     for batch in dataloader:
-        raise NotImplementedError()
         # Reset gradients.
-        # TODO
+        optimizer.zero_grad()
 
         # Forward pass.
-        output = None
+        output = net(batch['input'])
 
         # Compute the loss - binary cross entropy.
         # Documentation https://pytorch.org/docs/stable/generated/torch.nn.functional.binary_cross_entropy.html.
-        loss = None
+        loss = torch.nn.functional.binary_cross_entropy(output, batch['annotation'])
 
         # Backwards pass.
-        # TODO
+        loss.backward()
+        optimizer.step()
 
         # Save loss value in the aggregator.
         loss_aggregator.add(loss.item())
@@ -62,7 +62,7 @@ def run_validation_epoch(net, dataloader):
 if __name__ == '__main__':
     # Create the training dataset and dataloader.
     train_dataset = Simple2DDataset(split='train')
-    # train_dataset = Simple2DTransformDataset(split='train')
+    train_dataset = Simple2DTransformDataset(split='train')
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=BATCH_SIZE,
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     
     # Create the validation dataset and dataloader.
     valid_dataset = Simple2DDataset(split='valid')
-    # valid_dataset = Simple2DTransformDataset(split='valid')
+    valid_dataset = Simple2DTransformDataset(split='valid')
     valid_dataloader = DataLoader(
         valid_dataset,
         batch_size=BATCH_SIZE,
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     # Create the network.
     net = LinearClassifier()
-    # net = MLPClassifier()
+    net = MLPClassifier()
 
     # Create the optimizer.
     optimizer = Adam(net.parameters())
