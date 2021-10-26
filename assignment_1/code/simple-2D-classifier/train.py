@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     # Create the network.
     net = LinearClassifier()
-    net = MLPClassifier()
+    # net = MLPClassifier()
 
     # Create the optimizer.
     optimizer = Adam(net.parameters())
