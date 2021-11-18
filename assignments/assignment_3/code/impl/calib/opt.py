@@ -8,8 +8,15 @@ def ReprojectionError(P, point3D, point2D):
     # TODO
     # Project the 3D point into the image and compare it to the keypoint.
     # Make sure to properly normalize homogeneous coordinates.
+
+    p2d = np.append(point2D, [1])
+    p3d = np.append(point3D, [1])
+
+    np2d = P.dot(p3d)
+
+    np2dnorm = np2d[0:2] / np2d[2]
     
-    return # TODO
+    return np.square(point2D - np2dnorm).mean()
 
 # Compute the residuals for all correspondences of the image
 def ImageResiduals(P, points2D, points3D):

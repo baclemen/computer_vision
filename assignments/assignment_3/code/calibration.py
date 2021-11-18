@@ -48,7 +48,6 @@ def main():
   # TODO
   # Denormalize P
 
-  print(T2D, T3D)
   P = np.matmul(np.matmul(np.linalg.inv(T2D), (P_hat_opt)), T3D)
 
   # TODO
