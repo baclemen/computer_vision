@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 
 from impl.dlt import BuildProjectionConstraintMatrix
 from impl.util import HNormalize
@@ -64,8 +65,10 @@ def DecomposeP(P):
 
   # TODO
   # Find K and R
-  K = None
-  R = None
+  Kinv, Rinv = np.linalg.qr(P[0:2,:])
+  print("kinv rinv", Kinv, Rinv)
+  K = np.linalg.inv(Kinv)
+  R = np.linalg.inv(Rinv)
 
 
   # TODO
@@ -73,13 +76,18 @@ def DecomposeP(P):
   # We need to make sure that det(R) = 1 to have a proper rotation
   # We also want K to have a positive diagonal
 
+  T = np.diag(np.sign(np.diag(K)))
+
+  K = np.matmul(K,T)
+
+  R = R if np.linalg.det(R) > 0 else -R
 
   # TODO
   # Find the camera center C as the nullspace of P
-  C = None
+  C = scipy.linalg.null_space(P)
 
   # TODO
   # Compute t from R and C
-  t = None
+  t = 
 
   return K, R, t
