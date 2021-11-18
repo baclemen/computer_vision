@@ -12,11 +12,10 @@ def ReprojectionError(P, point3D, point2D):
     p2d = np.append(point2D, [1])
     p3d = np.append(point3D, [1])
 
-    np2d = P.dot(p3d)
-
+    np2d = P @ p3d
     np2dnorm = np2d[0:2] / np2d[2]
     
-    return np.square(point2D - np2dnorm).mean()
+    return point2D - np2dnorm
 
 # Compute the residuals for all correspondences of the image
 def ImageResiduals(P, points2D, points3D):

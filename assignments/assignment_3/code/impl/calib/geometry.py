@@ -67,7 +67,7 @@ def DecomposeP(P):
   # Find K and R
   M = P[:,0:3]
   Minv = np.linalg.inv(M)
-  Kinv, Rinv = np.linalg.qr(Minv)
+  Rinv, Kinv = np.linalg.qr(Minv)
   K = np.linalg.inv(Kinv)
   R = np.linalg.inv(Rinv)
 
@@ -79,8 +79,9 @@ def DecomposeP(P):
 
   T = np.diag(np.sign(np.diag(K)))
 
-  K = np.matmul(K,T)
-  R = np.matmul(T,R)
+  K = K @ T
+  R = np.linalg.inv(T) @ R
+
 
   R = R if np.linalg.det(R) > 0 else -R
 
@@ -92,6 +93,6 @@ def DecomposeP(P):
   # Compute t from R and C
   C = C[0:3] / C[3]
 
-  t = np.matmul(-R, C)
+  t = np.reshape(np.matmul(-R, C), [3,1])
 
   return K, R, t
