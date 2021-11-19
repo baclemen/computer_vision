@@ -2,6 +2,8 @@ import numpy as np
 
 def BuildProjectionConstraintMatrix(points2D, points3D):
 
+  print(points2D.shape, points3D.shape)
+
   # TODO
   # For each correspondence, build the two rows of the constraint matrix and stack them
 

@@ -1,9 +1,11 @@
+from os import MFD_HUGE_16GB
 import numpy as np
 from numpy.core.fromnumeric import shape
 
 from impl.dlt import BuildProjectionConstraintMatrix
 from impl.util import MakeHomogeneous, HNormalize
 from impl.sfm.corrs import GetPairMatches
+
 # from impl.opt import ImageResiduals, OptimizeProjectionMatrix
 
 # # Debug
@@ -152,16 +154,20 @@ def TriangulatePoints(K, im1, im2, matches):
   im1_corrs_ret = np.array([])
   im2_corrs_ret = np.array([])
 
+  M1 = np.append(R1, np.expand_dims(t2, 1), 1)
+  M2 = np.append(R2, np.expand_dims(t2, 1), 1)
+
   for i in range(points3D.shape[0]):
     X = MakeHomogeneous(points3D[i,:])
-    b1 = (P1 @ X)[2] > 0
-    b2 = (P2 @ X)[2] > 0
+    b1 = (M1 @ X)[2] > 0
+    b2 = (M2 @ X)[2] > 0
 
     if(b1 and b2):
-      points3D_ret = np.append(points3D_ret, points3D[0])
-      im1_corrs_ret = np.append(im1_corrs_ret, im1_corrs[0])
-      points3D_ret = np.append(points3D_ret, points3D[0])
+      points3D_ret = np.append(points3D_ret, points3D[i, :])
+      im1_corrs_ret = np.append(im1_corrs_ret, im1_corrs[i])
+      im2_corrs_ret = np.append(im2_corrs_ret, im1_corrs[i])
 
+  points3D_ret = points3D_ret.reshape([im1_corrs_ret.shape[0],3])
 
   return points3D_ret, im1_corrs_ret, im2_corrs_ret
 
@@ -171,7 +177,8 @@ def EstimateImagePose(points2D, points3D, K):
   # We use points in the normalized image plane.
   # This removes the 'K' factor from the projection matrix.
   # We don't normalize the 3D points here to keep the code simpler.
-  normalized_points2D = None
+  K_inv = np.linalg.inv(K)
+  normalized_points2D = HNormalize((K_inv @ MakeHomogeneous(points2D, ax=1).transpose())).transpose()
 
   constraint_matrix = BuildProjectionConstraintMatrix(normalized_points2D, points3D)
 
@@ -210,6 +217,12 @@ def TriangulateImage(K, image_name, images, registered_images, matches):
   # Afterwards you just add the index offset before adding the correspondences to the images.
   corrs = {}
 
+  for image2 in registered_images:
+    # TODO Triangulate initial points
+    points3D, im1_corrs, im2_corrs = TriangulatePoints(K, image, images[image2], matches[(image_name, image2)])
+    # Add the new 2D-3D correspondences to the images
+    image.Add3DCorrs(im1_corrs, list(range(points3D.shape[0])))
+    images[image2].Add3DCorrs(im2_corrs, list(range(points3D.shape[0])))
 
 
   return points3D, corrs
