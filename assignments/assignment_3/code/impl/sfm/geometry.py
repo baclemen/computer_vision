@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.fromnumeric import shape
 
 from impl.dlt import BuildProjectionConstraintMatrix
 from impl.util import MakeHomogeneous, HNormalize
@@ -15,8 +16,9 @@ def EstimateEssentialMatrix(K, im1, im2, matches):
   # Normalize coordinates (to points on the normalized image plane)
 
   # These are the keypoints on the normalized image plane (not to be confused with the normalization in the calibration exercise)
-  normalized_kps1 = 
-  normalized_kps2 = 
+  K_inv = np.linalg.inv(K)
+  normalized_kps1 = MakeHomogeneous(HNormalize((K_inv @ MakeHomogeneous(im1.kps, ax=1).transpose())).transpose(), ax=1)
+  normalized_kps2 = MakeHomogeneous(HNormalize((K_inv @ MakeHomogeneous(im2.kps, ax=1).transpose())).transpose(), ax=1)
 
   # TODO
   # Assemble constraint matrix
@@ -25,7 +27,12 @@ def EstimateEssentialMatrix(K, im1, im2, matches):
   for i in range(matches.shape[0]):
     # TODO
     # Add the constraints
+    p1 = normalized_kps1[matches[i,0],:].reshape([3,1])
+    p2 = normalized_kps2[matches[i,1],:].reshape([1,3])
 
+    M = p1 @ p2
+
+    constraint_matrix[i,:] = M.reshape(9)
   
   # Solve for the nullspace of the constraint matrix
   _, _, vh = np.linalg.svd(constraint_matrix)
@@ -33,13 +40,19 @@ def EstimateEssentialMatrix(K, im1, im2, matches):
 
   # TODO
   # Reshape the vectorized matrix to it's proper shape again
-  E_hat = 
+  E_hat = vectorized_E_hat.reshape([3,3])
 
   # TODO
   # We need to fulfill the internal constraints of E
   # The first two singular values need to be equal, the third one zero.
   # Since E is up to scale, we can choose the two equal singluar values arbitrarily
-  E = 
+
+  u,s,vh = np.linalg.svd(E_hat)
+  
+  s = np.eye(3)
+  s[2,2] = 0
+
+  E = u @ s @ vh
 
   # This is just a quick test that should tell you if your estimated matrix is not correct
   # It might fail if you estimated E in the other direction (i.e. kp2' * E * kp1)
@@ -134,11 +147,23 @@ def TriangulatePoints(K, im1, im2, matches):
   # TODO
   # Filter points behind the cameras by transforming them into each camera space and checking the depth (Z)
   # Make sure to also remove the corresponding rows in `im1_corrs` and `im2_corrs`
-  points3D = 
-  im1_corrs = 
-  im2_corrs =
 
-  return points3D, im1_corrs, im2_corrs
+  points3D_ret = np.array([])
+  im1_corrs_ret = np.array([])
+  im2_corrs_ret = np.array([])
+
+  for i in range(points3D.shape[0]):
+    X = MakeHomogeneous(points3D[i,:])
+    b1 = (P1 @ X)[2] > 0
+    b2 = (P2 @ X)[2] > 0
+
+    if(b1 and b2):
+      points3D_ret = np.append(points3D_ret, points3D[0])
+      im1_corrs_ret = np.append(im1_corrs_ret, im1_corrs[0])
+      points3D_ret = np.append(points3D_ret, points3D[0])
+
+
+  return points3D_ret, im1_corrs_ret, im2_corrs_ret
 
 def EstimateImagePose(points2D, points3D, K):  
 
@@ -146,7 +171,7 @@ def EstimateImagePose(points2D, points3D, K):
   # We use points in the normalized image plane.
   # This removes the 'K' factor from the projection matrix.
   # We don't normalize the 3D points here to keep the code simpler.
-  normalized_points2D = 
+  normalized_points2D = None
 
   constraint_matrix = BuildProjectionConstraintMatrix(normalized_points2D, points3D)
 

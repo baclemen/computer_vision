@@ -2,6 +2,7 @@ import gc
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.lib import eye
 
 from impl.vis import Plot3DPoints
 from impl.sfm.corrs import Find2D3DCorrespondences, GetPairMatches, UpdateReconstructionState
@@ -45,16 +46,16 @@ def main():
   # You can comment these lines once you verified that the images are loaded correctly
 
   # Show the images
-  PlotImages(images)
+  # PlotImages(images)
 
   # Show the keypoints
-  for image_name in image_names:
-    PlotWithKeypoints(images[image_name])
+  # for image_name in image_names:
+  #   PlotWithKeypoints(images[image_name])
 
   # Show the feature matches
-  for image_pair in itertools.combinations(image_names, 2):
-    PlotImagePairMatches(images[image_pair[0]], images[image_pair[1]], matches[(image_pair[0], image_pair[1])])
-    gc.collect()
+  # for image_pair in itertools.combinations(image_names, 2):
+  #   PlotImagePairMatches(images[image_pair[0]], images[image_pair[1]], matches[(image_pair[0], image_pair[1])])
+  #   gc.collect()
   
   e_im1_name = image_names[init_images[0]]
   e_im2_name = image_names[init_images[1]]
@@ -74,10 +75,22 @@ def main():
   # For each possible relative pose, try to triangulate points.
   # We can assume that the correct solution is the one that gives the most points in front of both cameras
   # Be careful not to set the transformation in the wrong direction
+  e_im2.SetPose(eye(3), np.array([0,0,0]))
 
+  num_points = np.array([])
 
-  # TODO
-  # Set the image poses in the images (image.SetPose(...))
+  for pose1 in possible_relative_poses:
+    e_im1.SetPose(pose1[0], pose1[1])
+    points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)
+    num_points = np.append(num_points, len(points3D))
+
+  num = np.argmax(num_points)
+
+  pose1 = possible_relative_poses[num]
+
+  # TODO  # Set the image poses in the images (image.SetPose(...))
+
+  e_im1.SetPose(pose1[0], pose1[1])
 
 
   # TODO Triangulate initial points
