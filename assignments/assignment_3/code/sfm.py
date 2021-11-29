@@ -2,7 +2,6 @@ import gc
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.lib import eye
 
 from impl.vis import Plot3DPoints
 from impl.sfm.corrs import Find2D3DCorrespondences, GetPairMatches, UpdateReconstructionState
@@ -75,7 +74,7 @@ def main():
   # For each possible relative pose, try to triangulate points.
   # We can assume that the correct solution is the one that gives the most points in front of both cameras
   # Be careful not to set the transformation in the wrong direction
-  e_im2.SetPose(eye(3), np.array([0,0,0]))
+  e_im2.SetPose(np.eye(3), np.array([0,0,0]))
 
   num_points = np.array([])
 
